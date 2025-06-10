@@ -377,11 +377,11 @@ const CryptoSignatureGenerator = () => {
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                     <input
-                      type="password" // Use type="password" for sensitive input
+                      type="text"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
-                      placeholder="Enter Password"
+                      placeholder="Enter Passkey"
                     />
                   </div>
                 </div>
