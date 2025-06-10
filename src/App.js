@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, Hash, Key, Settings, RefreshCw } from 'lucide-react';
+import { Copy, Hash, Key, Settings, RefreshCw } from 'lucide-react'; // Assuming lucide-react is available
 
 const CryptoSignatureGenerator = () => {
   const [partnerId, setPartnerId] = useState('');
@@ -9,6 +9,9 @@ const CryptoSignatureGenerator = () => {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
 
+  // Define your backend API URL here
+  const API_BASE_URL = 'https://node-encryption.onrender.com';
+
   // Load default configuration on component mount
   useEffect(() => {
     fetchDefaultConfig();
@@ -16,7 +19,11 @@ const CryptoSignatureGenerator = () => {
 
   const fetchDefaultConfig = async () => {
     try {
-      const response = await fetch('/api/config');
+      // Use the absolute URL for the API endpoint
+      const response = await fetch(`${API_BASE_URL}/api/config`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const config = await response.json();
       setPartnerId(config.partnerId);
       setPartnerKey(config.partnerKey);
@@ -24,9 +31,10 @@ const CryptoSignatureGenerator = () => {
       generateSignature(config.partnerId, config.partnerKey);
     } catch (err) {
       console.error('Failed to fetch default config:', err);
+      setError('Could not fetch default configuration. Using fallback defaults.');
       // Fallback to hardcoded defaults
-      const defaultPartnerId = "";
-      const defaultPartnerKey = "";
+      const defaultPartnerId = "defaultPartnerID"; // You might want to set meaningful defaults
+      const defaultPartnerKey = "defaultPartnerKey"; // if fetching fails
       setPartnerId(defaultPartnerId);
       setPartnerKey(defaultPartnerKey);
       generateSignature(defaultPartnerId, defaultPartnerKey);
@@ -36,6 +44,7 @@ const CryptoSignatureGenerator = () => {
   const generateSignature = async (pId = partnerId, pKey = partnerKey) => {
     if (!pId.trim() || !pKey.trim()) {
       setError('Both Partner ID and Partner Key are required');
+      setSignature(''); // Clear previous signature if inputs are invalid
       return;
     }
 
@@ -43,7 +52,8 @@ const CryptoSignatureGenerator = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/generate-signature', {
+      // Use the absolute URL for the API endpoint
+      const response = await fetch(`${API_BASE_URL}/api/generate-signature`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,27 +64,43 @@ const CryptoSignatureGenerator = () => {
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
       if (data.success) {
         setSignature(data.signature);
       } else {
         setError(data.error || 'Failed to generate signature');
+        setSignature('');
       }
     } catch (err) {
-      setError('Network error: Could not connect to server');
+      setError(`Network error: Could not connect to server or request failed: ${err.message}`);
+      setSignature('');
     } finally {
       setLoading(false);
     }
   };
 
   const copyToClipboard = async (text) => {
+    // Using execCommand for broader compatibility within iframes
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
     try {
-      await navigator.clipboard.writeText(text);
+      document.execCommand('copy');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy to clipboard (execCommand fallback):', err);
+      // Fallback if execCommand also fails (e.g., if not supported in context)
+      setError('Failed to copy to clipboard. Please copy manually.');
+    } finally {
+      document.body.removeChild(textArea);
     }
   };
 
@@ -83,7 +109,13 @@ const CryptoSignatureGenerator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 font-sans antialiased">
+      {/* Tailwind CSS for Inter font if not already applied globally */}
+      <style>{`
+        body {
+          font-family: 'Inter', sans-serif;
+        }
+      `}</style>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -118,7 +150,7 @@ const CryptoSignatureGenerator = () => {
                     type="text"
                     value={partnerId}
                     onChange={(e) => setPartnerId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                     placeholder="Enter Partner ID"
                   />
                 </div>
@@ -134,7 +166,7 @@ const CryptoSignatureGenerator = () => {
                     type="text"
                     value={partnerKey}
                     onChange={(e) => setPartnerKey(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                     placeholder="Enter Partner Key"
                   />
                 </div>
@@ -144,7 +176,7 @@ const CryptoSignatureGenerator = () => {
                 <button
                   onClick={() => generateSignature()}
                   disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 transform active:scale-95"
                 >
                   {loading ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -156,7 +188,7 @@ const CryptoSignatureGenerator = () => {
                 
                 <button
                   onClick={resetToDefaults}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 transform active:scale-95"
                 >
                   Reset
                 </button>
@@ -172,8 +204,8 @@ const CryptoSignatureGenerator = () => {
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error}</p>
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                <p>{error}</p>
               </div>
             )}
 
@@ -193,7 +225,7 @@ const CryptoSignatureGenerator = () => {
                   {signature && (
                     <button
                       onClick={() => copyToClipboard(signature)}
-                      className="absolute right-2 top-2 p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                      className="absolute right-2 top-2 p-1 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                       title="Copy signature"
                     >
                       <Copy className="w-4 h-4" />
@@ -206,9 +238,9 @@ const CryptoSignatureGenerator = () => {
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                   <h3 className="font-medium text-green-800 mb-2">Input Details:</h3>
                   <div className="space-y-1 text-sm text-green-700">
-                    <p><strong>Partner ID:</strong> {partnerId}</p>
-                    <p><strong>Partner Key:</strong> {partnerKey}</p>
-                    <p><strong>Concatenated:</strong> {partnerId + partnerKey}</p>
+                    <p><strong>Partner ID:</strong> {partnerId || 'N/A'}</p>
+                    <p><strong>Partner Key:</strong> {partnerKey || 'N/A'}</p>
+                    <p><strong>Concatenated:</strong> {(partnerId || '') + (partnerKey || '')}</p>
                   </div>
                 </div>
               )}
