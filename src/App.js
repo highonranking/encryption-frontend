@@ -454,7 +454,7 @@ const CryptoSignatureGenerator = () => {
                     <div className="space-y-1 text-sm text-purple-700">
                       <p><strong>Agent ID:</strong> {agentId || 'N/A'}</p>
                       <p><strong>Username:</strong> {username || 'N/A'}</p>
-                      <p><strong>Password:</strong> {password ? '********' : 'N/A'}</p> {/* Mask password */}
+                      <p><strong>Password:</strong> {password ? password : 'N/A'}</p> {/* Mask password */}
                       <p><strong>Concatenated:</strong> {`${agentId || ''}*${username || ''}:${password || ''}`}</p>
                     </div>
                   </div>
