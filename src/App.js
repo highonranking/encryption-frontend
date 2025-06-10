@@ -25,8 +25,8 @@ const CryptoSignatureGenerator = () => {
     } catch (err) {
       console.error('Failed to fetch default config:', err);
       // Fallback to hardcoded defaults
-      const defaultPartnerId = "aguHfIt46EsbBmU92adIG/+IfdU=";
-      const defaultPartnerKey = "NjE3NDZjMGM2ZWQ0MzdiOGI0ZWJlODk1OWJlYjcxYzY=";
+      const defaultPartnerId = "";
+      const defaultPartnerKey = "";
       setPartnerId(defaultPartnerId);
       setPartnerKey(defaultPartnerKey);
       generateSignature(defaultPartnerId, defaultPartnerKey);
