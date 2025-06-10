@@ -170,7 +170,7 @@ const CryptoSignatureGenerator = () => {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Hash className="w-8 h-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-800">
-              Crypto Tools
+              Signature Tools
             </h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
